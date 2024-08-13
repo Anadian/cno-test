@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](https://github.com/Anadian/cno-test/compare/v0.1.0...v0.1.1) (2024-08-13)
+
+
+### Documentation
+
+* Added CI badge to README.md ([2e1f344](https://github.com/Anadian/cno-test/commit/2e1f3446f7705a16b4defa7c9f19839139ab9d6c))
+
 ## [0.1.0](https://github.com/Anadian/cno-test/compare/v0.0.1...v0.1.0) (2024-08-13)
 
 
