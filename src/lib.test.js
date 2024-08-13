@@ -41,9 +41,6 @@ const FILENAME = 'lib.test.js';
 
 //# Global Variables
 /**## Functions*/
-/*NamespaceExport.test.after( () => {
-	console.log('After tests.');
-} );*/
 NamespaceExport.test( 'errorExpected:throws', function( t ){
 	t.diagnostic( t.name );
 	const test_matrix = {

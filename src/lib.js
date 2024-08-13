@@ -40,11 +40,6 @@ const FILENAME = 'lib.js';
 //## Errors
 
 //# Global Variables
-/*TestNS.after( () => {
-	console.log('After tests.');
-} );*/
-/*console.log( "%o", Test );
-console.log( "%o", TestNS );*/
 /**## Functions*/
 /**
 ### errorExpected
@@ -53,7 +48,7 @@ console.log( "%o", TestNS );*/
 #### Parametres
 | name | type | description |
 | --- | --- | --- |
-| expected_error | Error | The error expected. \[default: { instanceOf: TypeError, code: 'ERR_INVALID_ARG_TYPE' }\] |
+| expected_error | Error\|Function | The error expected. \[default: { instanceOf: TypeError, code: 'ERR_INVALID_ARG_TYPE' }\] |
 | received_error | Error | The error actually received.  |
 
 #### Returns
@@ -64,6 +59,7 @@ console.log( "%o", TestNS );*/
 #### History
 | version | change |
 | --- | --- |
+| 0.1.0 | Added better error messages and the ability `expected_error` as a validator function, with `received_error` as the input argument, which returns true if the validation passes. |
 | 0.0.1 | WIP |
 */
 function errorExpected( expected_error = { instanceOf: TypeError, code: 'ERR_INVALID_ARG_TYPE' }, received_error ){
