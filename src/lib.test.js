@@ -50,12 +50,25 @@ NamespaceExport.test( 'errorExpected:throws', function( t ){
 			namedExport: errorExpected
 		},
 		conditions: {
-			failure: {
+			failure_type: {
 				args: [
 					{
 						instanceOf: TypeError,
 						code: 'ERR_INVALID_ARG_TYPE'
 					},
+					{
+						instanceOf: Error,
+						code: 'ERR_INVALID_ARG_TYPE'
+					}
+				],
+				expected: {
+					instanceOf: DefaultExport.assert.AssertionError,
+					code: 'ERR_ASSERTION',
+					operator: 'fail'
+				}
+			},
+			failure_code: {
+				args: [
 					{
 						instanceOf: Error,
 						code: 'ERR_INVALID_ARG_VALUE'
@@ -66,17 +79,37 @@ NamespaceExport.test( 'errorExpected:throws', function( t ){
 					code: 'ERR_ASSERTION',
 					operator: 'fail'
 				}
+			},
+			functional: {
+				args: [
+					function( input ){
+						if( input === 1 ){
+							return true;
+						} else{
+							return false;
+						}
+					},
+					0
+				],
+				expected: {
+					instanceOf: DefaultExport.assert.AssertionError,
+					code: 'ERR_ASSERTION',
+					operator: 'fail'
+				}
 			}
 		}
 	};
+	var new_error = new Error();
+	new_error.code = 'ERR_INVALID_ARG_TYPE';
+	test_matrix.conditions.failure_code.args.push( new_error );
 	for( const function_key of Object.keys( test_matrix.functions ) ){
 		var input_function = test_matrix.functions[function_key];
 		//console.error( "%s (%s)", function_key, typeof(input_function) );
 		for( const condition_key of Object.keys( test_matrix.conditions ) ){
 			t.diagnostic( `${t.name}:${function_key}:${condition_key}` );
 			var condition = test_matrix.conditions[condition_key];
-			var bound_function = input_function.bind( null, ...condition.args );
-			var validator_function = input_function.bind( null, condition.expected ); // Input is also validator
+			var bound_function = input_function.bind( /*{ logger: { log: console.log } }*/null, ...condition.args );
+			var validator_function = input_function.bind( /*{ logger: { log: console.log } }*/null, condition.expected ); // Input is also validator
 			NamespaceExport.assert.throws( bound_function, validator_function );
 		}
 	}
@@ -90,7 +123,7 @@ DefaultExport.test( 'errorExpected:returns', function( t ){
 			namedExport: errorExpected
 		},
 		conditions: {
-			input_options_noop: {
+			input_options_default: {
 				args: [
 					{
 						instanceOf: TypeError,
@@ -98,12 +131,25 @@ DefaultExport.test( 'errorExpected:returns', function( t ){
 					}
 				],
 				expected: true
+			},
+			functional: {
+				args: [
+					function( input ){
+						if( input === 1 ){
+							return true;
+						} else{
+							return false;
+						}
+					},
+					1
+				],
+				expected: true
 			}
 		}
 	};
 	var error = new TypeError();
 	error.code = 'ERR_INVALID_ARG_TYPE';
-	test_matrix.conditions.input_options_noop.args.push( error );
+	test_matrix.conditions.input_options_default.args.push( error );
 	for( const function_key of Object.keys( test_matrix.functions ) ){
 		var input_function = test_matrix.functions[function_key];
 		for( const condition_key of Object.keys( test_matrix.conditions ) ){

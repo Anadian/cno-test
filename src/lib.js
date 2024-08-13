@@ -68,7 +68,8 @@ function errorExpected( expected_error = { instanceOf: TypeError, code: 'ERR_INV
 	var arguments_array = Array.from(arguments);
 	var _return = false;
 	var message = '';
-	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `received: ${arguments_array}`});
+	//this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `received: ${arguments_array}`});
+	//console.log( "%O %O", expected_error, received_error );
 	// Parametre checks
 	// Function
 	if( typeof(expected_error) === 'function' ){
@@ -86,7 +87,8 @@ function errorExpected( expected_error = { instanceOf: TypeError, code: 'ERR_INV
 		}
 	}
 	// Return
-	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}`});
+	//console.log(message)
+	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}: ${message}`});
 	if( _return !== true ){
 		return Assert.fail(message);
 	}
