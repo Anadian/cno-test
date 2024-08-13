@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/github/license/Anadian/cno-test)](https://github.com/Anadian/cno-test/blob/main/LICENSE)
 [![NPM Version](https://img.shields.io/npm/v/cno-test)](https://www.npmjs.com/package/cno-test)
 [![Coverage Status](https://coveralls.io/repos/github/Anadian/cno-test/badge.svg?branch=main)](https://coveralls.io/github/Anadian/cno-test?branch=main)
+[![ci](https://github.com/Anadian/cno-test/actions/workflows/ci.yml/badge.svg)](https://github.com/Anadian/cno-test/actions/workflows/ci.yml)
 
 > Micropackage: a simple, ultra-minimal test framework built around Node's builtin test runner.
 # Table of Contents
