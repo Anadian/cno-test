@@ -32,6 +32,7 @@ Documentation License: [![Creative Commons License](https://i.creativecommons.or
 	//## Internal
 	//## Standard
 	import Test from 'node:test';
+	//import * as TestNS from 'node:test';
 	import Assert from 'node:assert/strict';
 	//## External
 //# Constants
@@ -39,6 +40,11 @@ const FILENAME = 'lib.js';
 //## Errors
 
 //# Global Variables
+/*TestNS.after( () => {
+	console.log('After tests.');
+} );*/
+/*console.log( "%o", Test );
+console.log( "%o", TestNS );*/
 /**## Functions*/
 /**
 ### errorExpected
@@ -65,18 +71,28 @@ function errorExpected( expected_error = { instanceOf: TypeError, code: 'ERR_INV
 	// Variables
 	var arguments_array = Array.from(arguments);
 	var _return = false;
+	var message = '';
 	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `received: ${arguments_array}`});
 	// Parametre checks
 	// Function
-	if( received_error instanceof expected_error.instanceOf ){
-		if( received_error.code === expected_error.code ){
-			_return = true;
+	if( typeof(expected_error) === 'function' ){
+		_return = expected_error.call( null, received_error );
+		message = `Calling validator function returned false.\n`;
+	} else{
+		if( received_error instanceof expected_error.instanceOf ){
+			if( received_error.code === expected_error.code ){
+				_return = true;
+			} else{
+				message = `Codes don't match:\nreceived ${received_error.code}\nexpected: ${expected_error.code}\n`;
+			}
+		} else{
+			message = `Types don't match:\nreceived ${typeof(received_error)}\nexpected: ${expected_error.instanceOf}\n`;
 		}
 	}
 	// Return
 	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}`});
 	if( _return !== true ){
-		return Assert.fail(`received: ${JSON.stringify( received_error, null, '\t' )}\nexpected:${JSON.stringify( expected_error, null, '\t' )}\n`);
+		return Assert.fail(message);
 	}
 	return _return;
 } // errorExpected
