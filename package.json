@@ -1,6 +1,6 @@
 {
 	"name": "cno-test",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "Micropackage: a simple, ultra-minimal test framework built around Node's builtin test runner.",
 	"repository": {
 		"type": "git",
