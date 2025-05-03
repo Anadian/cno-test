@@ -30,6 +30,7 @@ Documentation License: [![Creative Commons License](https://i.creativecommons.or
 
 //# Dependencies
 	//## Internal
+	//import Error from './error.js';
 	//## Standard
 	import Test from 'node:test';
 	//import * as TestNS from 'node:test';
@@ -95,8 +96,8 @@ function errorExpected( expected_error = { instanceOf: TypeError, code: 'ERR_INV
 	return _return;
 } // errorExpected
 
-const NAMESPACE = { errorExpected: errorExpected, test: Test, assert: Assert };
-export { NAMESPACE as default, errorExpected, Test as test, Assert as assert };
+const NAMESPACE = { errorExpected: errorExpected, test: Test, assert: Assert/*, error: Error*/ };
+export { NAMESPACE as default, errorExpected, Test as test, Assert as assert/*, Error as error*/ };
 
 // lib.js EOF
 
