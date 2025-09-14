@@ -26,7 +26,7 @@
 		"mit"
 	],
 	"scripts": {
-		"test": "node --test ./src/lib.test.js",
+		"test": "node --test ./src/lib.test.js ./src/test-matrix.test.js",
 		"coverage": "c8 pnpm test",
 		"coverage-report": "c8 report -r=text-lcov > coverage/lcov.txt",
 		"do-ci": "pnpm coverage && pnpm coverage-report",
@@ -98,5 +98,8 @@
 		"hjson": "^3.2.2",
 		"npm-check-updates": "^17.0.6",
 		"standard-version": "^9.5.0"
+	},
+	"dependencies": {
+		"cno-bedrock": "^0.0.1"
 	}
 }

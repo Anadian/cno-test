@@ -33,6 +33,7 @@ Documentation License: [![Creative Commons License](https://i.creativecommons.or
 	import Test from './lib.js';
 	//## Standard
 	//## External
+	import Bedrock from 'cno-bedrock';
 //# Constants
 const FILENAME = 'test-matrix.js';
 //## Errors
@@ -40,16 +41,145 @@ const FILENAME = 'test-matrix.js';
 //# Global Variables
 /**## Functions*/
 function FunctionsObject( options = null ){
-	if( !( this instanceof FunctionsObject ) ){
+	if( !new.target ){
 		return new FunctionsObject( options );
 	}
 	const FUNCTION_NAME = 'FunctionsObject';
 	const DEFAULT_OPTIONS = {};
-	//Object.defineProperties( this, {} );
 	return this;
 }
-FunctionsObject.isFunctionsObject = function( input_object = null ){	
+FunctionsObject.assertFunctionsObject = function( input_object = null ){	
+	var return_error = null;
+	var errors_array = [];
+	if( input_object == null ){
+		return_error = new Error( `Invalid object value; received obect is null.` );
+		throw return_error;
+	}
+	for( const function_key of input_object ){
+		if( typeof(input_object[function_key]) !== 'function' ){
+			return_error = new Error( `Invalid property "${function_key}"; all properties must be functions.` );
+			errors_array.push( return_error );
+		}
+	}
+	if( errors_array.length > 1 ){
+		return_error = new AggregateError( errors_array, 'Multiple non-function properties found.' );
+		throw return_error;
+	} else if( errors_array.length === 1 ){
+		return_error = errors_array[0];
+		throw return_error;
+	}
 }
+FunctionsObject.isFunctionsObject = function( input_object = null ){
+	var _return = false;
+	try{
+		FunctionsObject.assertFunctionsObject( input_object );
+		_return = true;
+	} catch( error ){
+		_return = false;
+	}
+	return _return;
+}
+/**
+### FunctionsObject.prototype.addFunction
+> Adds a function to a the FunctionsObject instance.
+
+#### Parametres
+| name | type | description |
+| --- | --- | --- |
+| name | string | The name with which the function will be referred.  |
+| func | function | The actually function to be added to the FunctionsObject  |
+
+#### Throws
+| code | type | condition |
+| --- | --- | --- |
+| 'ERR_INVALID_ARG_TYPE' | TypeError | Thrown if a given argument isn't of the correct type. |
+
+#### History
+| version | change |
+| --- | --- |
+| 0.0.1 | WIP |
+*/
+FunctionsObject.prototype.addFunction = function( name, func ){
+
+	// Constants
+	const FUNCTION_NAME = 'FunctionsObject.prototype.addFunction';
+	// Variables
+	var return_error = null;
+	// Parametre checks
+	if( typeof(name) !== 'string' ){
+		return_error = new TypeError('Param "name" is not of type string.');
+		return_error.code = 'ERR_INVALID_ARG_TYPE';
+		throw return_error;
+	}
+	if( typeof(func) !== 'function' ){
+		return_error = new TypeError('Param "func" is not of type function.');
+		return_error.code = 'ERR_INVALID_ARG_TYPE';
+		throw return_error;
+	}
+	// Function
+	this[name] = func;
+} // FunctionsObject.prototype.addFunction
+
+/**
+### ConditionsObject
+> A object containing definitions for multiple conditions and subtest in a test matrix.
+
+#### Parametres
+| name | type | description |
+| --- | --- | --- |
+| input_options | object | Run-time options. \[default: {}\] |
+
+##### `options` Properties
+| name | type | default | description |
+| --- | --- | --- | --- |
+| noop | boolean | false | Skip primary functionality. |
+
+#### Returns
+| type | description |
+| --- | --- |
+| ConditionsObject | Returns the new instance of ConditionsObject. |
+
+#### Throws
+| code | type | condition |
+| --- | --- | --- |
+| 'ERR_INVALID_ARG_TYPE' | TypeError | Thrown if a given argument isn't of the correct type. |
+
+#### History
+| version | change |
+| --- | --- |
+| 0.0.1 | WIP |
+*/
+function ConditionsObject( input_options = {} ){
+	if( !new.target ){
+		return new ConditionsObject(input_options, );
+	}
+	// Constants
+	const FUNCTION_NAME = 'ConditionsObject';
+	const DEFAULT_OPTIONS = {
+		noop: false, // Skip primary functionality.
+	};// Variables
+	var _return = null;
+	var return_error = null;
+		// Private Properties
+	
+	// Public Properties
+	Object.defineProperties( this, {
+	} );
+	// Parametre checks
+	if( typeof(input_options) !== 'object' ){
+		return_error = new TypeError('Param "input_options" is not of type object.');
+		return_error.code = 'ERR_INVALID_ARG_TYPE';
+		throw return_error;
+	}
+
+	// Options
+	var { options, log_function, validation_function } = Bedrock.deriveOptions.call( this, input_options, DEFAULT_OPTIONS );
+	// Function
+	// Return
+	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}`});
+	return _return;
+} // ConditionsObject
+
 /**
 ### TestMatrix
 > A robust test matrix.
@@ -76,33 +206,39 @@ FunctionsObject.isFunctionsObject = function( input_object = null ){
 | 0.0.0 | Introduced |
 */
 export default function TestMatrix( options = null ){
-	if( !( this instanceof TestMatrix ) ){
+	if( !new.target ){
 		return new TestMatrix( options );
 	}
 	const FUNCTION_NAME = 'TestMatrix';
 	const DEFAULT_OPTIONS = {};
-	this.constants ??= options.constants ?? null;
-	this.state ??= options.state ?? null;
-	this._functions ??= options.functions ?? null;
-	this._conditions ??= options.conditions ?? null;
+	// Variables
+	var _return = null;
+	var return_error = null;
+	// Private properties
+	// Public Properties
+	this.constants ??= options?.constants ?? null;
+	this.state ??= options?.state ?? null;
 	Object.defineProperties( this, {
+		_functions: {
+			writable: true,
+			value: new FunctionsObject()
+		},
+		_conditions: {
+			writable: true,
+			value: new ConditionsObject()
+		},
 		functions: {
 			get(){
 				return this._functions;
 			},
 			set( functions_object ){
 				var return_error = null; 
-				if( functions_object == null || typeof(functions_object) !== 'object' ){
-					return_error = new Error( 'Only simple key-value objects can be assigned to `TestMatrix.functions`; value was either `null` or not an object.' );
+				if( FunctionsObject.isFunctionsObject( functions_object ) === true ){
+					this._functions = { ...functions_object };
+				} else{
+					return_error = new Error( 'Tried to assign an invalid value to TestMatrix.prototype.functions; value must be an instance of `FunctionsObject`.' );
 					throw return_error;
 				}
-				for( const function_key of functions_object ){
-					if( typeof(functions_object[function_key]) !== 'function' ){
-						return_error = new Error( `Invalid property "${function_key}": to assign to \`TestMatrix.functions\` all properties must be functions.` );
-						throw return_error;
-					}
-				}
-				this._functions = { ...functions_object };
 			}
 		},
 		conditions: {
@@ -112,7 +248,7 @@ export default function TestMatrix( options = null ){
 			set( conditions_object ){
 				var return_error = null;
 				for( const condition_key of conditions_object ){
-					if( Condition.IsCondition(conditions_object[condition_key]) !== true ){
+					if( Condition.isCondition(conditions_object[condition_key]) !== true ){
 						return_error = new Error( `Invalid property "${condition_key}": attempted to assign an object with an invalid condition to \`TestMatrix.conditions\`; all properties on the assigned conditions object must be valid \`Condition\` objects.` );
 						throw return_error;
 					}
@@ -121,8 +257,77 @@ export default function TestMatrix( options = null ){
 			}
 		}
 	} );
+	this.addFunction = this._functions.addFunction.bind( this._functions );
+	//this.addCondition = this._conditions.addCondition.bind( this._conditions );
 	return this;
 }
+/**
+### TestMatrix.assertTestMatrix
+> Returns if the given object is a valid `TestMatrix`-compatible object and throws with error otherwise.
+
+#### Parametres
+| name | type | description |
+| --- | --- | --- |
+| input_object | object | The object to test for `TestMatrix` properties. \[default: null\] |
+
+#### Returns
+| type | description |
+| --- | --- |
+| boolean | Returns `true` if compatible with `TestMatrix` and throws otherwise. |
+
+#### Throws
+| code | type | condition |
+| --- | --- | --- |
+| 'ERR_INVALID_ARG_TYPE' | TypeError | Thrown if a given argument isn't of the correct type. |
+
+#### History
+| version | change |
+| --- | --- |
+| 0.0.1 | WIP |
+*/
+TestMatrix.assertTestMatrix = function( input_object = null ){
+	// Constants
+	const FUNCTION_NAME = 'TestMatrix.assertTestMatrix';
+	// Variables
+	var return_error = null;
+	var errors_array = [];
+	// Parametre checks
+	try{
+		Bedrock.assert.assertStrictlyNotEqual( input_object, null, 'input_object' );
+	} catch(error){
+		errors_array.push( error );
+	}
+	// Function
+	try{
+		Bedrock.assert.assertStrictlyNotEqual( input_object.constants, null, 'input_object.constants', 'null', 'object' );
+	} catch(error){
+		errors_array.push( error );
+	}
+	try{
+		Bedrock.assert.assertStrictlyNotEqual( input_object.state, null, 'input_object.state' );
+	} catch(error){
+		errors_array.push( error );
+	}
+	try{
+		FunctionsObject.assertFunctionsObject( input_object._functions );
+	} catch(error){
+		errors_array.push( error );
+	}
+	try{
+		ConditionsObject.assertConditionsObject( input_object._conditions );
+	} catch(error){
+		errors_array.push( error );
+	}
+	// Return
+	if( errors_array.length > 1 ){
+		return_error = new AggregateError( errors_array );
+		throw return_error;
+	} else if( errors_array.length === 1 ){
+		return_error = errors_array[0];
+		throw return_error;
+	}
+} // TestMatrix.assertTestMatrix
+
 /**
 ### TestMatrix.isTestMatrix
 > Returns true if the object passed is a `TestMatrix` instance or structually equivalent.
@@ -156,43 +361,20 @@ export default function TestMatrix( options = null ){
 */
 TestMatrix.isTestMatrix = function( input_object = null ){
 	const FUNCTION_NAME = 'TestMatrix.isTestMatrix';
-	const DEFAULT_OPTIONS = {
-		noop: false, // Skip primary functionality.
-		noDefaults: false, // Don't apply static default options.
-		noDynamic: false, // Don't apply dynamic default options.
-	};// Variables
-	var arguments_array = Array.from(arguments);
-	var _return = null;
-	var return_error = null;
-	var options = {};
-	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `received: ${arguments_array}`});
+	// Variables
+	var _return = false;
 	// Parametre checks
-	if( typeof(input_object) !== 'object' ){
-		return_error = new TypeError('Param "input_object" is not of type object.');
-		return_error.code = 'ERR_INVALID_ARG_TYPE';
-		throw return_error;
+	// Function
+	try{
+		TestMatrix.assertTestMatrix( input_object );
+		_return = true;
+	} catch(error){
+		_return = false;
 	}
-
-	// Options
-	if( input_options.noDefaults !== true ){
-		if( input_options.noDynamic !== true ){
-			var dynamic_defaults = {};
-			options = Object.assign( {}, DEFAULT_OPTIONS, dynamic_defaults, input_options );
-		} else{
-			options = Object.assign( {}, DEFAULT_OPTIONS, input_options );
-		} // noDynamic
-	} else{
-		options = Object.assign( {}, input_options );
-	} // noDefaults
-	if( options.noop !== true ){
-		// Function
-	} // noop
 	// Return
 	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}`});
 	return _return;
 } // TestMatrix.isTestMatrix
-
-
 
 /**
 ### TestMatrix.prototype.addCondition
@@ -289,7 +471,7 @@ TestMatrix.prototype.addCondition = function( input_options = {} ){
 	} // noDefaults
 	if( options.noop !== true ){
 		// Function
-		if( options.name =!= '' ){
+		if( options.name != '' && typeof(options.name) === typeof('') ){
 			if( Condition.isCondition( options.condition ) === true ){
 				this._conditions[options.name] = options.condition;
 				_return = this;
@@ -453,7 +635,7 @@ TestMatrix.prototype.run = async function( input_options = {} ){
 } // TestMatrix.prototype.run
 
 function Condition( options = null ){
-	if( !( this instanceof Condition ) ){
+	if( !new.target ){
 		return new Condition( options );
 	}
 	this.skip ??= options.skip ?? false;
@@ -467,16 +649,24 @@ function Condition( options = null ){
 	// Return
 	return this;
 }
-
-function Condition.isCondition( condition_object = null ){
-	var _return = true;
-	if( typeof(condition_object.skip) !== 'boolean' ) _return = false;
-	if( typeof(condition_object.debug) !== 'boolean' ) _return = false;
-	if( typeof(condition_object.success) !== 'boolean' ) _return = false;
-	if( typeof(condition_object.promise) !== 'boolean' ) _return = false;
-	if( condition_object.pre != null && typeof(condition_object.pre) === 'function' ) _return = false;
-	if( condition_object.post != null && typeof(condition_object.post) === 'function' ) _return = false;
-	if( Array.isArray(condition_object.args) !== true ) _return = false;
+Condition.assertCondition = function( condition_object = null ){
+	Bedrock.assert.assertStrictlyNotEqual( condition_object, null );
+	Bedrock.assert.deepStrictEqual( typeof(condition_object.skip), 'boolean' );
+	Bedrock.assert.deepStrictEqual( typeof(condition_object.debug), 'boolean' );
+	Bedrock.assert.deepStrictEqual( typeof(condition_object.success), 'boolean' );
+	Bedrock.assert.deepStrictEqual( typeof(condition_object.promise), 'boolean' );
+	Bedrock.assert.deepStrictEqual( typeof(condition_object.pre), 'function' );
+	Bedrock.assert.deepStrictEqual( typeof(condition_object.post), 'function' );
+	Bedrock.assert.deepStrictEqual( Array.isArray(condition_object.args), true );
+}
+Condition.isCondition = function( condition_object = null ){
+	var _return = false;
+	try{
+		Condition.assertCondition( condition_object );
+		_return = true;
+	} catch( error ){
+		_return = false;
+	}
 	return _return;
 }
 /**
@@ -516,11 +706,13 @@ TestMatrix.create = function( input_options = {} ){
 		noop: false, // Skip primary functionality.
 		noDefaults: false, // Don't apply static default options.
 		noDynamic: false, // Don't apply dynamic default options.
+		functionsObject: null,
+		conditionsObject: null
 	};// Variables
 	var arguments_array = Array.from(arguments);
 	var _return = null;
 	var return_error = null;
-	var options = {};
+	var options = null;
 	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `received: ${arguments_array}`});
 	// Parametre checks
 	if( typeof(input_options) !== 'object' ){
@@ -530,13 +722,14 @@ TestMatrix.create = function( input_options = {} ){
 	}
 
 	// Options
-	if( input_options.noDefaults !== true ){
-		options = Object.assign( options, DEFAULT_OPTIONS, input_options );
-	} else{
-		options = Object.assign( options, input_options );
-	}
+	options = Bedrock.derive( input_options, DEFAULT_OPTIONS );
 	if( options.noop !== true ){
 		// Function
+		_return = new TestMatrix();
+		//if( FunctionsObject.isFunctionsObject( options.functionsObject ) ){
+		_return.functions = options.functionsObject;
+		_return.conditions = options.conditionsObject;
+		//}
 	} // noop
 	// Return
 	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}`});

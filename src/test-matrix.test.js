@@ -31,7 +31,7 @@ Documentation License: [![Creative Commons License](https://i.creativecommons.or
 //# Dependencies
 	//## Internal
 	import Test from './lib.js'
-	import TestMatrix from '/test-matrix.js';
+	import TestMatrix from './test-matrix.js';
 	//## Standard
 	//## External
 //# Constants
@@ -43,17 +43,10 @@ const FILENAME = 'test-matrix.test.js';
 Test.test( 'TestMatrix:constructor:returns', function( t ){
 	t.diagnostic( t.name );
 	var test_matrix = TestMatrix();
+	test_matrix.addFunction( 'constructor', TestMatrix );
+	test_matrix.addCondition( { name: 'essential', success: true, expected: ( value ) => { return TestMatrix.isTestMatrix( value ) } } );
 
-	for( const function_key of Object.keys( test_matrix.functions ) ){
-		var input_function = test_matrix.functions[function_key];
-		for( const condition_key of Object.keys( test_matrix.conditions ) ){
-			var test_id = `${t.name}:${function_key}:${condition_key}`;
-			t.diagnostic( test_id );
-			var condition = test_matrix.conditions[condition_key];
-			var function_return = input_function.apply( null, condition.args );
-			Test.assert.deepStrictEqual( function_return, condition.expected, test_id );
-		}
-	}
+	test_matrix.run();
 } );
 
 // test-matrix.test.js EOF
