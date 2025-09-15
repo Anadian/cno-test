@@ -179,6 +179,26 @@ function ConditionsObject( input_options = {} ){
 	this?.logger?.log({file: FILENAME, function: FUNCTION_NAME, level: 'debug', message: `returned: ${_return}`});
 	return _return;
 } // ConditionsObject
+ConditionsObject.assertConditionsObject = function( input_object = null, logFunction = Bedrock.noop.returnNull ){
+	const FUNCTION_NAME = 'ConditionsObject.assertConditionsObject';
+	var errors_array = [];
+	for( const key of Object.keys( input_object ) ){
+		try{
+			Condition.assertCondition( input_object[key] );
+		} catch( error ){
+			logFunction( `For condition ${key}: caught error: ${error}` );
+			errors_array.push( error );
+		}
+	}
+	// Return
+	if( errors_array.length > 1 ){
+		return_error = new AggregateError( errors_array );
+		throw return_error;
+	} else if( errors_array.length === 1 ){
+		return_error = errors_array[0];
+		throw return_error;
+	}
+}
 
 /**
 ### TestMatrix
@@ -217,7 +237,7 @@ export default function TestMatrix( options = null ){
 	// Private properties
 	// Public Properties
 	this.constants ??= options?.constants ?? null;
-	this.state ??= options?.state ?? null;
+	this.state ??= options?.state ?? {};
 	Object.defineProperties( this, {
 		_functions: {
 			writable: true,
@@ -255,8 +275,22 @@ export default function TestMatrix( options = null ){
 				}
 				this._conditions = { ...conditions_object };
 			}
+		},
+		testContext: {
+			get(){
+				return this.state?.testContext;
+			},
+			set( test_context ){
+				this.state.testContext = test_context;
+			}
+		},
+		name: {
+			get(){
+				return this.testContext?.name;
+			}
 		}
 	} );
+	this.testContext ??= options.testContext;
 	this.addFunction = this._functions.addFunction.bind( this._functions );
 	//this.addCondition = this._conditions.addCondition.bind( this._conditions );
 	return this;
@@ -369,6 +403,11 @@ TestMatrix.isTestMatrix = function( input_object = null ){
 		TestMatrix.assertTestMatrix( input_object );
 		_return = true;
 	} catch(error){
+		if( error instanceof AggregateError ){
+			for( const sub_error of error.errors ){
+				console.log( `${FUNCTION_NAME} caught error: ${sub_error}` );
+			}
+		}
 		_return = false;
 	}
 	// Return
@@ -448,9 +487,12 @@ TestMatrix.prototype.addCondition = function( input_options = {} ){
 
 	// Options
 	if( input_options.noDefaults !== true ){
+		console.log(`${FUNCTION_NAME}: noDefaults !== true`);
 		if( input_options.noDynamic !== true ){
+			console.log(`${FUNCTION_NAME}: noDynamic !== true`);
 			var dynamic_defaults = {};
 			if( input_options.condition == null ){
+				console.log(`${FUNCTION_NAME}: input_options.condition == null`);
 				dynamic_defaults.condition = new Condition( {
 					skip: input_options.skip,
 					debug: input_options.debug,
@@ -506,7 +548,7 @@ TestMatrix.prototype.addCondition = function( input_options = {} ){
 | noop | boolean | false | Skip primary functionality. |
 | noDefaults | boolean | false | Don't apply static default options. |
 | noDynamic | boolean | false | Don't apply dynamic default options. |
-| log | Function | null | A function to be used for logging. |
+| t | [TestContext](https://nodejs.org/api/test.html#class-testcontext) | null | The test context from `test` callback. |
 
 #### Returns
 | type | description |
@@ -526,11 +568,8 @@ TestMatrix.prototype.addCondition = function( input_options = {} ){
 TestMatrix.prototype.run = async function( input_options = {} ){
 	const FUNCTION_NAME = 'TestMatrix.prototype.run';
 	const DEFAULT_OPTIONS = {
-		noop: false, // Skip primary functionality.
-		noDefaults: false, // Don't apply static default options.
-		noDynamic: false, // Don't apply dynamic default options.
-		logger: null
-	};// Variables
+	};
+	// Variables
 	var arguments_array = Array.from(arguments);
 	var _return = null;
 	var return_error = null;
@@ -544,7 +583,7 @@ TestMatrix.prototype.run = async function( input_options = {} ){
 	}
 
 	// Options
-	if( input_options.noDefaults !== true ){
+	/*if( input_options.noDefaults !== true ){
 		if( input_options.noDynamic !== true ){
 			var dynamic_defaults = {};
 			if( input_options.logger == null ){
@@ -564,7 +603,8 @@ TestMatrix.prototype.run = async function( input_options = {} ){
 		} // noDynamic
 	} else{
 		options = Object.assign( {}, input_options );
-	} // noDefaults
+	} // noDefaults */
+	options = Bedrock.deriveOptions.call( this, input_options, DEFAULT_OPTIONS ); 
 	if( options.noop !== true ){
 		// Function
 		for( const function_key of Object.keys( this.functions ) ){
@@ -579,7 +619,7 @@ TestMatrix.prototype.run = async function( input_options = {} ){
 					}
 				};
 				if( subtest.condition.skip !== true ){
-					t.diagnostic( subtest.id );
+					options.logFunction( subtest.id );
 					if( subtest.condition.debug === true ){
 						subtest.state.thisObject = {
 							logger: { 
@@ -624,7 +664,7 @@ TestMatrix.prototype.run = async function( input_options = {} ){
 						await subtest.condition.post.call( subtest.state.thisObject, subtest );
 					}
 				} else{
-					t.diagnostic( `${subtest.id}: skipped.` );
+					options.logFunction( `${subtest.id}: skipped.` );
 				}
 			} //for condition_key
 		} //for function_key
@@ -650,21 +690,68 @@ function Condition( options = null ){
 	return this;
 }
 Condition.assertCondition = function( condition_object = null ){
-	Bedrock.assert.assertStrictlyNotEqual( condition_object, null );
-	Bedrock.assert.deepStrictEqual( typeof(condition_object.skip), 'boolean' );
-	Bedrock.assert.deepStrictEqual( typeof(condition_object.debug), 'boolean' );
-	Bedrock.assert.deepStrictEqual( typeof(condition_object.success), 'boolean' );
-	Bedrock.assert.deepStrictEqual( typeof(condition_object.promise), 'boolean' );
-	Bedrock.assert.deepStrictEqual( typeof(condition_object.pre), 'function' );
-	Bedrock.assert.deepStrictEqual( typeof(condition_object.post), 'function' );
-	Bedrock.assert.deepStrictEqual( Array.isArray(condition_object.args), true );
-}
+	var return_error = null;
+	var errors_array = [];
+	try{
+		Bedrock.assert.assertStrictlyNotEqual( condition_object, null );
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{ 
+		Bedrock.assert.deepStrictEqual( typeof(condition_object.skip), 'boolean' )
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{ 
+		Bedrock.assert.deepStrictEqual( typeof(condition_object.debug), 'boolean' )
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{ 
+		Bedrock.assert.deepStrictEqual( typeof(condition_object.success), 'boolean' )
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{ 
+		Bedrock.assert.deepStrictEqual( typeof(condition_object.promise), 'boolean' )
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{
+		Bedrock.assert.assertNullOrFunction( condition_object.pre );
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{
+		Bedrock.assert.assertNullOrFunction( condition_object.post );
+	} catch( error ){
+		errors_array.push( error );
+	}
+	try{
+		Bedrock.assert.deepStrictEqual( Array.isArray(condition_object.args), true )
+	} catch( error ){
+		errors_array.push( error );
+	}
+	if( errors_array.length > 1 ){
+		return_error = new AggregateError( errors_array );
+		throw return_error;
+	} else if( errors_array.length === 1 ){
+		return_error = errors_array[0];
+		throw return_error;
+	}
+} // Condition.assertCondition
 Condition.isCondition = function( condition_object = null ){
+	const FUNCTION_NAME = "Condition.isCondition";
 	var _return = false;
 	try{
 		Condition.assertCondition( condition_object );
 		_return = true;
 	} catch( error ){
+		if( error instanceof AggregateError ){
+			for( const sub_error of error.errors ){
+				console.log( `${FUNCTION_NAME} caught error: ${sub_error}` );
+			}
+		}
 		_return = false;
 	}
 	return _return;

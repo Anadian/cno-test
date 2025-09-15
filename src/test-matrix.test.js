@@ -40,13 +40,13 @@ const FILENAME = 'test-matrix.test.js';
 
 //# Global Variables
 /**## Functions*/
-Test.test( 'TestMatrix:constructor:returns', function( t ){
+Test.test( 'TestMatrix:constructor:returns', async function( t ){
 	t.diagnostic( t.name );
-	var test_matrix = TestMatrix();
+	var test_matrix = TestMatrix( { testContext: t } );
 	test_matrix.addFunction( 'constructor', TestMatrix );
-	test_matrix.addCondition( { name: 'essential', success: true, expected: ( value ) => { return TestMatrix.isTestMatrix( value ) } } );
+	test_matrix.addCondition( { name: 'essential', success: true, args: [ { testContext: t, logFunction: t.diagnostic.bind( t ) } ], expected: ( value ) => { return TestMatrix.isTestMatrix( value ) } } );
 
-	test_matrix.run();
+	await test_matrix.run( { t: t, logFunction: t.diagnostic.bind( this ) } );
 } );
 
 // test-matrix.test.js EOF
